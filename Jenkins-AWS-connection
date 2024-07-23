@@ -1,0 +1,17 @@
+// Integrate aws with jenkins
+// aws credential-plugin and add the credentails in credentials section
+//Need to configure aws-cli in local jenkins system
+
+pipeline{
+    agent any
+    environment{
+        cred = credentials('aws-key')
+    }
+    stages{
+        stage("aws check"){
+            steps{
+                sh 'aws ec2 describe-instances'
+            }
+        }
+    }
+}
