@@ -15,3 +15,73 @@ pipeline{
         }
     }
 }
+
+
+//
+pipeline{
+    agent any
+    tools{
+        maven 'Maven'
+    }
+    stages{
+        stage("check out stage"){
+            steps{
+                checkout scmGit(branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/Mahesh-Gontla/addressbook.git']])
+            }
+        }
+        stage("maven build"){
+            steps{
+               sh 'mvn package' 
+            }
+            
+        }
+        stage("docker build"){
+            steps{
+                sh 'docker build -t addressbook . '
+            }
+            
+        }
+        stage("list images"){
+            steps{
+                sh 'docker images'
+            }
+        }
+    }
+}
+
+////Need to create a repository in docker hub
+// First of all need to be add credentials of docker in jenkins credentials section
+pipeline{
+    agent any
+    tools{
+        maven 'Maven'
+    }
+    environment{
+        dockerhub_cred = credentials('docker-cred')
+    }
+    stages{
+        stage("check out stage"){
+            steps{
+                checkout scmGit(branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/Mahesh-Gontla/addressbook.git']])
+            }
+        }
+        stage("maven build"){
+            steps{
+                sh 'mvn package'
+            }
+        }
+        stage("docker buid"){
+            steps{
+                sh 'docker build -t gontla456/addressbook:1.0 .'
+            }
+        }
+        stage("docker push"){
+            steps{
+                //echo pass (encrypted password)--> using pipes we are gonna provideit is a input to a cmd
+                sh 'echo $dockerhub_cred_PSW | docker login -u $dockerhub_cred_USR --password-stdin'          
+                sh 'docker push gontla456/addressbook:1.0'
+            }
+        }
+        
+    }
+}
